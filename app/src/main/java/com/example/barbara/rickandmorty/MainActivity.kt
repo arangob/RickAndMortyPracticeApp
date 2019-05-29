@@ -1,8 +1,8 @@
 package com.example.barbara.rickandmorty
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.barbara.rickandmorty.JsonUtils.parseResponse
@@ -35,10 +35,16 @@ class MainActivity : AppCompatActivity() {
 
         val linearLayoutManager = LinearLayoutManager(this)
         recyclerView.layoutManager = linearLayoutManager
-        this.adapter = CharacterListAdapter()
+        adapter = CharacterListAdapter(object : ItemListener<RickAndMortyCharacter> {
+            override fun onClick(item: RickAndMortyCharacter) {
+                val intent = Intent(this@MainActivity, CharacterDetailActivity::class.java)
+                intent.putExtra("character", item)
+                startActivity(intent)
+            }
+        } )
         recyclerView.adapter = this.adapter
 
-        getRickAndMortyCharacterResponse(1).subscribeOn(Schedulers.io())
+        getRickAndMortyCharacterResponse(INIT_PAGE).subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(rickAndMortyCharacterObserver)
 
@@ -58,5 +64,6 @@ class MainActivity : AppCompatActivity() {
             subscriber.onComplete()
         }
     }
-
 }
+
+const val INIT_PAGE = 1
