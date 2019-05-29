@@ -2,6 +2,7 @@ package com.example.barbara.rickandmorty
 
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.barbara.rickandmorty.JsonUtils.parseResponse
@@ -32,18 +33,28 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        recyclerView.layoutManager = LinearLayoutManager(this)
+        val linearLayoutManager = LinearLayoutManager(this)
+        recyclerView.layoutManager = linearLayoutManager
         this.adapter = CharacterListAdapter()
         recyclerView.adapter = this.adapter
 
-        getRickAndMortyCharacterResponse().subscribeOn(Schedulers.io())
+        getRickAndMortyCharacterResponse(1).subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(rickAndMortyCharacterObserver)
+
+        recyclerView.addOnScrollListener(
+            object : InfiniteScrollListener(linearLayoutManager) {
+                override fun onLoadMore(currentPage: Int) {
+                    getRickAndMortyCharacterResponse(currentPage).subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(rickAndMortyCharacterObserver)
+                }
+            })
     }
 
-    private fun getRickAndMortyCharacterResponse() : Observable<String?> {
+    private fun getRickAndMortyCharacterResponse(currentPage: Int) : Observable<String?> {
         return Observable.create { subscriber ->
-            subscriber.onNext(getApiCharacterResponse()!!)
+            subscriber.onNext(getApiCharacterResponse(currentPage)!!)
             subscriber.onComplete()
         }
     }
